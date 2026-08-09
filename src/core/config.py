@@ -127,6 +127,8 @@ class Settings(BaseSettings):
     metrics_enabled: bool = Field(default=True, alias="METRICS_ENABLED")
     prometheus_port: int = Field(default=8000, alias="PROMETHEUS_PORT")
     sentry_dsn: Optional[str] = Field(default=None, alias="SENTRY_DSN")
+    api_key: Optional[str] = Field(default=None, alias="API_KEY")
+    flask_secret_key: str = Field(default="", alias="FLASK_SECRET_KEY")
 
     database: DatabaseSettings = Field(default_factory=DatabaseSettings)
     clickup: ClickUpSettings = Field(default_factory=ClickUpSettings)

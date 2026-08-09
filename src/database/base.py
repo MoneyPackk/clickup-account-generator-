@@ -13,8 +13,12 @@ Base = declarative_base()
 
 def create_engine_from_settings(settings: Settings):
     """Create a SQLAlchemy engine from application settings."""
+    url = settings.database.url
+    # SQLite does not support connection-pool arguments used by server engines.
+    if url.startswith("sqlite"):
+        return create_engine(url, echo=settings.database.echo)
     return create_engine(
-        settings.database.url,
+        url,
         pool_size=settings.database.pool_size,
         max_overflow=settings.database.pool_overflow,
         pool_recycle=settings.database.pool_recycle,

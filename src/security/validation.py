@@ -81,7 +81,7 @@ class AccountValidator:
         if not isinstance(email, str) or not email.strip():
             raise ValidationError("Email is required", field="email")
         try:
-            validate_email(email)
+            validate_email(email, check_deliverability=False)
         except EmailNotValidError as exc:
             raise ValidationError(f"Invalid email: {exc}", field="email") from exc
 
