@@ -31,11 +31,13 @@ setup(
         "psycopg2-binary>=2.9.9",
         "cryptography>=41.0.7",
         "structlog>=23.2.0",
+        "python-json-logger>=2.0.7",
         "prometheus-client>=0.19.0",
         "tenacity>=8.2.3",
         "circuitbreaker>=1.4.0",
         "flask>=3.0.0",
         "gunicorn>=21.2.0",
+        "click>=8.1.0",
         "httpx>=0.25.2",
     ],
     extras_require={
@@ -66,7 +68,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "clickup-generator=src.main:main",
+            "clickup-generator=src.cli.commands:cli",
         ],
     },
 )

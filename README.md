@@ -1,283 +1,200 @@
-# ClickUp Account Generator - Enterprise Edition
+# ClickUp Account Generator (Enterprise Edition)
 
-A production-ready, enterprise-grade Python solution for automated ClickUp account generation with comprehensive security, monitoring, and reliability features.
+A production-ready, scalable Python service for automated ClickUp account generation. Built with enterprise-grade security, observability, and maintainability.
 
-## 📋 Table of Contents
+> **Legal Notice**: Automated account creation may violate the ClickUp terms of service. This tool is intended only for authorized testing and internal automation scenarios where ClickUp-assistive tooling is permitted.
+
+## Features
+
+- **Automated ClickUp signup** via Selenium WebDriver
+- **Strong password generation** with configurable policy
+- **Email/username validation** using Pydantic
+- **PostgreSQL/SQLite persistence** with SQLAlchemy and Alembic migrations
+- **Audit logging** for compliance
+- **Rate limiting** via token bucket
+- **Prometheus metrics** for monitoring
+- **Structured logging** with correlation IDs
+- **Multi-backend secrets** (environment, HashiCorp Vault, AWS Secrets Manager)
+- **REST API** via Flask
+- **Docker & Docker Compose** production setup
+- **CI/CD** with GitHub Actions
+
+## Table of Contents
 
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [Configuration](#configuration)
-- [Deployment](#deployment)
+- [CLI Usage](#cli-usage)
+- [HTTP API](#http-api)
+- [Running with Docker](#running-with-docker)
+- [Database Migrations](#database-migrations)
+- [Testing](#testing)
 - [Architecture](#architecture)
+- [Deployment](#deployment)
 - [Contributing](#contributing)
+- [License](#license)
 
-## ✨ Features
-
-### Core Capabilities
-- ✅ Automated ClickUp account creation via Selenium automation
-- ✅ Secure credential generation and management
-- ✅ Two-factor authentication (2FA) support
-- ✅ Batch account creation with configurable parameters
-
-### Enterprise Features
-- 🔒 **Security**: Input validation, secrets management, rate limiting
-- 📊 **Monitoring**: Prometheus metrics, structured JSON logging
-- 🔄 **Resilience**: Exponential backoff, circuit breakers, retry logic
-- 🗄️ **Persistence**: SQLAlchemy ORM with database migrations
-- 📦 **Deployment**: Docker, docker-compose, Kubernetes ready
-- 🧪 **Testing**: >80% coverage with unit & integration tests
-- 📚 **Documentation**: Complete API docs and deployment guides
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Python 3.10+
-- Chrome/Chromium browser
-- PostgreSQL (for production)
-- Docker (optional, for containerized deployment)
-
-### Installation
+## Quick Start
 
 ```bash
-# Clone repository
+# Clone and enter repository
 git clone https://github.com/MoneyPackk/clickup-account-generator-.git
 cd clickup-account-generator-
 
 # Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 
-# Setup environment
+# Copy environment template
 cp .env.example .env
-# Edit .env with your configuration
+# Edit .env to add your configuration
+
+# Create DB tables
+python -m src.main setup-db
+
+# Create a single account
+python -m src.main create --email-domain example.com --count 1
 ```
 
-### Basic Usage
+## Configuration
 
-```python
-from src.account.generator import ClickUpAccountGenerator
-from src.core.config import AccountConfig
+All configuration is handled via environment variables or a `.env` file. See:
 
-# Configure
-config = AccountConfig(
-    email_domain="company.com",
-    min_password_length=18,
-    enable_two_factor=True
-)
+- [`.env.example`](./.env.example) for a full template
+- [`docs/CONFIGURATION.md`](./docs/CONFIGURATION.md) for detailed options
+- `config/dev.yaml`, `config/staging.yaml`, `config/prod.yaml` for environment presets
 
-# Generate account
-generator = ClickUpAccountGenerator(config)
-result = generator.generate_account()
+## CLI Usage
 
-print(result)
-# Output: {
-#   "success": True,
-#   "email": "user_abc123@company.com",
-#   "password": "SecurePassword123!@#",
-#   "username": "user_abc123"
-# }
-```
-
-## ⚙️ Configuration
-
-### Environment Variables
+The tool exposes a Click-based CLI:
 
 ```bash
-# Application
-ENVIRONMENT=development  # development, staging, production
-LOG_LEVEL=INFO
-DEBUG=false
+# Show help
+python -m src.cli.commands --help
 
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/clickup_gen
-DATABASE_POOL_SIZE=10
-DATABASE_POOL_RECYCLE=3600
+# Create accounts
+python -m src.cli.commands create --email-domain company.com --count 5
 
-# ClickUp
-CLICKUP_BASE_URL=https://app.clickup.com
-CLICKUP_TIMEOUT=30
-CLICKUP_RETRIES=3
-CLICKUP_RETRY_BACKOFF=2
+# Create with table output
+python -m src.cli.commands create --count 3 -o table
 
-# Security
-RATE_LIMIT_REQUESTS=100
-RATE_LIMIT_WINDOW=3600  # 1 hour
-PASSWORD_MIN_LENGTH=16
-PASSWORD_REQUIRE_SPECIAL=true
+# Show config status
+python -m src.cli.commands status
 
-# Monitoring
-METRICS_ENABLED=true
-PROMETHEUS_PORT=8000
-SENTRY_DSN=https://...
-
-# Secrets Management
-SECRETS_BACKEND=environment  # environment, vault, aws
-VAULT_ADDR=http://vault:8200
-AWS_REGION=us-east-1
+# Create DB tables
+python -m src.cli.commands setup-db
 ```
 
-See [CONFIGURATION.md](docs/CONFIGURATION.md) for complete configuration guide.
-
-## 🐳 Docker Deployment
-
-### Development
+Legacy CLI is also available:
 
 ```bash
-# Build and run with docker-compose
-docker-compose up -d
+python -m src.main --setup-db --count 1 --email-domain company.com
+```
+
+## HTTP API
+
+Start the server:
+
+```bash
+python src/server.py
+```
+
+Create an account:
+
+```bash
+curl -X POST http://localhost:5000/api/v1/accounts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "username": "user_123",
+    "password": "SecurePassword1!",
+    "workspace_name": "My Workspace"
+  }'
+```
+
+See [`docs/API.md`](./docs/API.md) for the complete API reference.
+
+## Running with Docker
+
+```bash
+# Start app + database
+docker-compose up -d app db
 
 # Run migrations
-docker-compose exec app flask db upgrade
+docker-compose exec app alembic upgrade head
 
 # View logs
 docker-compose logs -f app
+
+# Optional Prometheus monitoring profile
+docker-compose --profile monitoring up -d
 ```
 
-### Production
+## Database Migrations
+
+Alembic is used for migrations:
 
 ```bash
-# Build production image
-docker build -t clickup-generator:latest .
+# Create a new migration
+alembic revision --autogenerate -m "add new table"
 
-# Push to registry
-docker push your-registry/clickup-generator:latest
+# Apply all migrations
+alembic upgrade head
 
-# Deploy with Kubernetes
-kubectl apply -f k8s/deployment.yaml
+# Downgrade
+alembic downgrade -1
 ```
 
-See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for detailed deployment guide.
-
-## 🏗️ Architecture
-
-```
-┌─────────────────────────────────────────────────┐
-│         API Client (REST/CLI)                    │
-└─────────────────┬───────────────────────────────┘
-                  │
-┌─────────────────▼───────────────────────────────┐
-│         Account Generator Service               │
-├──────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐             │
-│  │ Validation   │  │ Rate Limiter │             │
-│  └──────────────┘  └──────────────┘             │
-├──────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐             │
-│  │ Browser Mgmt │  │ Retry Logic  │             │
-│  └──────────────┘  └──────────────┘             │
-└─────────────────┬───────────────────────────────┘
-                  │
-┌─────────────────▼───────────────────────────────┐
-│         Data Layer (SQLAlchemy)                 │
-├──────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐             │
-│  │ Accounts     │  │ Audit Logs   │             │
-│  └──────────────┘  └──────────────┘             │
-└─────────────────┬───────────────────────────────┘
-                  │
-        ┌─────────▼──────────┐
-        │  PostgreSQL DB     │
-        └────────────────────┘
-```
-
-## 📊 Monitoring
-
-### Prometheus Metrics
-
-Available at `http://localhost:8000/metrics`:
-
-- `account_generation_total` - Total accounts generated
-- `account_generation_success_total` - Successful generations
-- `account_generation_failures_total` - Failed generations
-- `account_generation_duration_seconds` - Generation time histogram
-- `rate_limiter_requests_total` - Total rate limit checks
-
-### Logging
-
-Logs are structured JSON format for easy aggregation:
-
-```json
-{
-  "timestamp": "2024-01-15T10:30:45.123Z",
-  "level": "INFO",
-  "logger": "clickup_generator.account",
-  "message": "Account generated successfully",
-  "email": "user_abc123@company.com",
-  "duration_ms": 2345,
-  "trace_id": "abc123xyz789"
-}
-```
-
-## 🧪 Testing
+## Testing
 
 ```bash
-# Run all tests
-pytest
+# Run unit tests
+pytest -m unit
 
-# Run with coverage
+# Run integration tests (requires Postgres)
+pytest -m integration
+
+# With coverage
 pytest --cov=src --cov-report=html
-
-# Run specific test suite
-pytest tests/unit/
-pytest tests/integration/
-
-# Run with markers
-pytest -m "not integration"
 ```
 
-## 📚 Documentation
+## Architecture
 
-- [API Documentation](docs/API.md) - Complete API reference
-- [Configuration Guide](docs/CONFIGURATION.md) - All configuration options
-- [Deployment Guide](docs/DEPLOYMENT.md) - Production deployment
-- [Architecture](docs/ARCHITECTURE.md) - System design and decisions
-- [Contributing](docs/CONTRIBUTING.md) - Development guidelines
+The project follows Clean Architecture principles with clear separation between infrastructure, domain, and presentation layers:
 
-## 🔒 Security
+- `src/core/` - Configuration, logging, metrics, exceptions, context
+- `src/security/` - Validation, secrets, rate limiting
+- `src/database/` - Models, repository pattern, migrations
+- `src/browser/` - Selenium driver factory and lifecycle manager
+- `src/api/` - ClickUp API client and reusable schemas
+- `src/account/` - Account generation domain logic
+- `src/server.py` - Flask HTTP API
+- `src/cli/commands.py` - CLI entrypoint
 
-- Input validation on all user inputs
-- Secrets management (Vault, AWS Secrets Manager)
-- Rate limiting (token bucket algorithm)
-- Audit logging for compliance
-- HTTPS enforcement
-- CORS and CSRF protection
-- Secure password generation
-- Regular security audits
+See [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for deeper design details.
 
-## 📈 Performance
+## Deployment
 
-- Connection pooling for database
-- Async operations where applicable
-- Caching for frequently accessed data
-- Optimized Selenium driver usage
-- Resource cleanup and memory management
+See [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) for full deployment instructions, including Kubernetes examples, secret management, and production security checklist.
 
-## 🤝 Contributing
+## Monitoring
 
-We welcome contributions! Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines.
+- Prometheus metrics exposed on port `8000` by default
+- Health: `GET /health`
+- Readiness: `GET /ready`
+- Metrics: `GET /metrics` (when Prometheus server is enabled)
 
-## 📄 License
+## Contributing
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+See [`docs/CONTRIBUTING.md`](./docs/CONTRIBUTING.md) for development setup, code standards, and pull request process.
 
-## 🆘 Support
+## License
 
-- 📧 Email: support@example.com
-- 🐛 Issues: https://github.com/MoneyPackk/clickup-account-generator-/issues
-- 💬 Discussions: https://github.com/MoneyPackk/clickup-account-generator-/discussions
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
 
-## ⚠️ Legal Notice
+## Disclaimer
 
-**Important**: Automating account creation may violate the Terms of Service of ClickUp or other services. Ensure you have:
-- Explicit authorization from ClickUp
-- Legal review of your use case
-- Compliance with applicable laws and regulations
-
-Use this tool responsibly and ethically.
-
----
-
-**Built with ❤️ for enterprise reliability and security**
+Use responsibly and in compliance with applicable laws and platform terms of service.
