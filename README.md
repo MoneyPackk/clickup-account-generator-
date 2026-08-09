@@ -1,100 +1,156 @@
-# ClickUp Account Generator (Enterprise Edition)
+<div align="center">
 
-A production-ready, scalable Python service for automated ClickUp account generation. Built with enterprise-grade security, observability, and maintainability.
+```
+███╗   ███╗ ██████╗ ███╗   ██╗███████╗██╗   ██╗██████╗  █████╗  ██████╗██╗  ██╗
+████╗ ████║██╔═══██╗████╗  ██║██╔════╝╚██╗ ██╔╝██╔══██╗██╔══██╗██╔════╝██║ ██╔╝
+██╔████╔██║██║   ██║██╔██╗ ██║█████╗   ╚████╔╝ ██████╔╝███████║██║     █████╔╝
+██║╚██╔╝██║██║   ██║██║╚██╗██║██╔══╝    ╚██╔╝  ██╔═══╝ ██╔══██║██║     ██╔═██╗
+██║ ╚═╝ ██║╚██████╔╝██║ ╚████║███████╗   ██║   ██║     ██║  ██║╚██████╗██║  ██╗
+╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝     ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
+```
 
-> **Legal Notice**: Automated account creation may violate the ClickUp terms of service. This tool is intended only for authorized testing and internal automation scenarios where ClickUp-assistive tooling is permitted.
+### 💰 A project by **MONEYPACK** 💰
 
-## Features
+---
 
-- **Automated ClickUp signup** via Selenium WebDriver
-- **Strong password generation** with configurable policy
-- **Email/username validation** using Pydantic
-- **PostgreSQL/SQLite persistence** with SQLAlchemy and Alembic migrations
-- **Audit logging** for compliance
-- **Rate limiting** via token bucket
-- **Prometheus metrics** for monitoring
-- **Structured logging** with correlation IDs
-- **Multi-backend secrets** (environment, HashiCorp Vault, AWS Secrets Manager)
-- **REST API** via Flask
-- **Docker & Docker Compose** production setup
-- **CI/CD** with GitHub Actions
+```
+ ██████╗██╗     ██╗ ██████╗██╗  ██╗██╗   ██╗██████╗
+██╔════╝██║     ██║██╔════╝██║ ██╔╝██║   ██║██╔══██╗
+██║     ██║     ██║██║     █████╔╝ ██║   ██║██████╔╝
+██║     ██║     ██║██║     ██╔═██╗ ██║   ██║██╔═══╝
+╚██████╗███████╗██║╚██████╗██║  ██╗╚██████╔╝██║
+ ╚═════╝╚══════╝╚═╝ ╚═════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝
+```
 
-## Table of Contents
+# ⚡ ClickUp Account Generator — Enterprise Edition
 
-- [Features](#features)
-- [Quick Start](#quick-start)
-- [Configuration](#configuration)
-- [CLI Usage](#cli-usage)
-- [HTTP API](#http-api)
-- [Running with Docker](#running-with-docker)
-- [Database Migrations](#database-migrations)
-- [Testing](#testing)
-- [Architecture](#architecture)
-- [Deployment](#deployment)
-- [Contributing](#contributing)
-- [License](#license)
+**Automated · Secure · Observable · Production-Ready**
 
-## Quick Start
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Flask-REST%20API-black?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![Selenium](https://img.shields.io/badge/Selenium-WebDriver-43B02A?style=for-the-badge&logo=selenium&logoColor=white)](https://www.selenium.dev/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Prometheus](https://img.shields.io/badge/Prometheus-Metrics-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)](https://prometheus.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](./LICENSE)
+
+> 🔐 **Legal Notice**: Automated account creation may violate the ClickUp Terms of Service. This tool is intended **only** for authorized testing and internal automation scenarios where automated tooling is explicitly permitted.
+
+</div>
+
+---
+
+## ✨ Features
+
+| Category | What's Included |
+|---|---|
+| 🤖 **Automation** | Selenium WebDriver-based signup flow |
+| 🔑 **Security** | Strong password generation, API key auth, constant-time comparison |
+| ✅ **Validation** | Email/username validation via Pydantic & email-validator |
+| 🗄️ **Persistence** | PostgreSQL/SQLite via SQLAlchemy + Alembic migrations |
+| 📋 **Audit** | Full audit log trail for every action |
+| 🚦 **Rate Limiting** | Token bucket rate limiter per IP and correlation ID |
+| 📊 **Observability** | Prometheus metrics, structured JSON logging, correlation IDs |
+| 🔒 **Secrets** | Env vars, HashiCorp Vault, or AWS Secrets Manager |
+| 🌐 **REST API** | Flask HTTP API with OpenAPI-style responses |
+| 🐳 **Docker** | Full Docker Compose stack with monitoring profile |
+| ⚙️ **CI/CD** | GitHub Actions pipeline |
+
+---
+
+## 📚 Table of Contents
+
+- [✨ Features](#-features)
+- [🚀 Quick Start](#-quick-start)
+- [⚙️ Configuration](#️-configuration)
+- [🖥️ CLI Usage](#️-cli-usage)
+- [🌐 HTTP API](#-http-api)
+- [🐳 Running with Docker](#-running-with-docker)
+- [🗄️ Database Migrations](#️-database-migrations)
+- [🧪 Testing](#-testing)
+- [🏗️ Architecture](#️-architecture)
+- [🚢 Deployment](#-deployment)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+
+---
+
+## 🚀 Quick Start
 
 ```bash
-# Clone and enter repository
+# 1. Clone the repo
 git clone https://github.com/MoneyPackk/clickup-account-generator-.git
 cd clickup-account-generator-
 
-# Create virtual environment
+# 2. Set up your Python environment
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dependencies
+source venv/bin/activate       # Windows: venv\Scripts\activate
 pip install -r requirements-dev.txt
 
-# Copy environment template
+# 3. Configure
 cp .env.example .env
-# Edit .env to add your configuration
+# ✏️  Edit .env — set FLASK_SECRET_KEY, API_KEY, DATABASE_URL, etc.
 
-# Create DB tables
-python -m src.main setup-db
+# 4. Initialise the database
+python -m src.cli.commands setup-db
 
-# Create a single account
-python -m src.main create --email-domain example.com --count 1
+# 5. Generate your first account
+python -m src.cli.commands create --email-domain example.com --count 1
 ```
 
-## Configuration
+---
 
-All configuration is handled via environment variables or a `.env` file. See:
+## ⚙️ Configuration
 
-- [`.env.example`](./.env.example) for a full template
-- [`docs/CONFIGURATION.md`](./docs/CONFIGURATION.md) for detailed options
-- `config/dev.yaml`, `config/staging.yaml`, `config/prod.yaml` for environment presets
+All configuration is driven by environment variables or a `.env` file.
 
-## CLI Usage
+| Resource | Purpose |
+|---|---|
+| [`.env.example`](./.env.example) | Full variable template |
+| [`docs/CONFIGURATION.md`](./docs/CONFIGURATION.md) | Detailed option reference |
 
-The tool exposes a Click-based CLI:
+**Key variables to set before running:**
 
 ```bash
-# Show help
+FLASK_SECRET_KEY=<strong-random-value>   # Required — app will refuse to start without it
+API_KEY=<your-api-key>                   # Recommended — secures all API endpoints
+DATABASE_URL=postgresql://...            # Recommended for production (defaults to SQLite)
+ENVIRONMENT=production
+```
+
+---
+
+## 🖥️ CLI Usage
+
+```bash
+# Show all commands
 python -m src.cli.commands --help
 
-# Create accounts
+# Generate accounts
 python -m src.cli.commands create --email-domain company.com --count 5
 
-# Create with table output
+# Output as a table
 python -m src.cli.commands create --count 3 -o table
 
-# Show config status
+# Check config / connectivity status
 python -m src.cli.commands status
 
-# Create DB tables
+# Bootstrap the database
 python -m src.cli.commands setup-db
 ```
 
-Legacy CLI is also available:
+<details>
+<summary>Legacy CLI (backward-compat)</summary>
 
 ```bash
 python -m src.main --setup-db --count 1 --email-domain company.com
 ```
 
-## HTTP API
+</details>
+
+---
+
+## 🌐 HTTP API
 
 Start the server:
 
@@ -102,99 +158,153 @@ Start the server:
 python src/server.py
 ```
 
-Create an account:
+### Create an account
 
 ```bash
 curl -X POST http://localhost:5000/api/v1/accounts \
   -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
   -d '{
     "email": "user@example.com",
-    "username": "user_123",
-    "password": "SecurePassword1!",
-    "workspace_name": "My Workspace"
+    "username": "user_123"
   }'
 ```
 
-See [`docs/API.md`](./docs/API.md) for the complete API reference.
-
-## Running with Docker
+### Batch create
 
 ```bash
-# Start app + database
+curl -X POST http://localhost:5000/api/v1/accounts/batch \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{"count": 5}'
+```
+
+### Health checks
+
+```bash
+curl http://localhost:5000/health    # liveness
+curl http://localhost:5000/ready     # readiness
+```
+
+📖 Full reference → [`docs/API.md`](./docs/API.md)
+
+---
+
+## 🐳 Running with Docker
+
+```bash
+# Start app + Postgres
 docker-compose up -d app db
 
-# Run migrations
+# Apply migrations
 docker-compose exec app alembic upgrade head
 
-# View logs
+# Stream logs
 docker-compose logs -f app
 
-# Optional Prometheus monitoring profile
+# Add Prometheus + Grafana monitoring
 docker-compose --profile monitoring up -d
 ```
 
-## Database Migrations
+---
 
-Alembic is used for migrations:
+## 🗄️ Database Migrations
 
 ```bash
-# Create a new migration
-alembic revision --autogenerate -m "add new table"
+# Auto-generate a migration from model changes
+alembic revision --autogenerate -m "describe your change"
 
-# Apply all migrations
+# Apply all pending migrations
 alembic upgrade head
 
-# Downgrade
+# Roll back one step
 alembic downgrade -1
 ```
 
-## Testing
+---
+
+## 🧪 Testing
 
 ```bash
-# Run unit tests
+# Unit tests only (fast, no external deps)
 pytest -m unit
 
-# Run integration tests (requires Postgres)
+# Integration tests (requires a running Postgres)
 pytest -m integration
 
-# With coverage
+# Full suite with coverage report
 pytest --cov=src --cov-report=html
+open htmlcov/index.html
 ```
 
-## Architecture
+---
 
-The project follows Clean Architecture principles with clear separation between infrastructure, domain, and presentation layers:
+## 🏗️ Architecture
 
-- `src/core/` - Configuration, logging, metrics, exceptions, context
-- `src/security/` - Validation, secrets, rate limiting
-- `src/database/` - Models, repository pattern, migrations
-- `src/browser/` - Selenium driver factory and lifecycle manager
-- `src/api/` - ClickUp API client and reusable schemas
-- `src/account/` - Account generation domain logic
-- `src/server.py` - Flask HTTP API
-- `src/cli/commands.py` - CLI entrypoint
+```
+src/
+├── core/        # Config, logging, metrics, exceptions, request context
+├── security/    # Validation, secrets backends, rate limiter
+├── database/    # SQLAlchemy models, repository pattern, Alembic
+├── browser/     # Selenium driver factory & lifecycle management
+├── api/         # ClickUp API client, schemas, response helpers
+├── account/     # Account generation domain logic (core use-case)
+├── cli/         # Click-based CLI entrypoint
+└── server.py    # Flask REST API
+```
 
-See [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for deeper design details.
+The project follows **Clean Architecture** — infrastructure is kept at the edges, business logic stays in `src/account/` and `src/core/`.
 
-## Deployment
+📖 Deep dive → [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 
-See [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) for full deployment instructions, including Kubernetes examples, secret management, and production security checklist.
+---
 
-## Monitoring
+## 🚢 Deployment
 
-- Prometheus metrics exposed on port `8000` by default
-- Health: `GET /health`
-- Readiness: `GET /ready`
-- Metrics: `GET /metrics` (when Prometheus server is enabled)
+📖 [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) covers:
 
-## Contributing
+- Docker & docker-compose
+- Kubernetes manifests
+- Secret management (Vault / AWS)
+- Production security checklist
 
-See [`docs/CONTRIBUTING.md`](./docs/CONTRIBUTING.md) for development setup, code standards, and pull request process.
+---
 
-## License
+## 📊 Monitoring
 
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+| Endpoint | Purpose |
+|---|---|
+| `GET /health` | Liveness probe |
+| `GET /ready` | Readiness probe |
+| `:8000/metrics` | Prometheus scrape target |
 
-## Disclaimer
+Grafana dashboards can be connected to the Prometheus instance started via `docker-compose --profile monitoring up`.
 
-Use responsibly and in compliance with applicable laws and platform terms of service.
+---
+
+## 🤝 Contributing
+
+See [`docs/CONTRIBUTING.md`](./docs/CONTRIBUTING.md) for:
+- Dev environment setup
+- Code style & standards
+- Pull request process
+
+---
+
+## 📄 License
+
+Released under the **MIT License** — see [`LICENSE`](./LICENSE) for details.
+
+---
+
+<div align="center">
+
+```
+💰  MONEYPACK  💰
+```
+
+**Built & maintained by [MONEYPACK](https://github.com/MoneyPackk)**
+
+*© MONEYPACK — Use responsibly and in compliance with all applicable laws and platform terms of service.*
+
+</div>

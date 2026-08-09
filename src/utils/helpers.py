@@ -1,6 +1,5 @@
 """General-purpose helper utilities."""
 
-import random
 import re
 import secrets
 import string
@@ -11,8 +10,9 @@ SANITIZE_PATTERN = re.compile(r"[<>'\"&\r\n]|(--|;/|\*)")
 
 
 def generate_username(prefix: str = "user", length: int = 10) -> str:
-    """Generate a random username with a prefix and alphanumeric suffix."""
-    suffix = "".join(random.choices(string.ascii_lowercase + string.digits, k=length))
+    """Generate a cryptographically random username with a prefix and alphanumeric suffix."""
+    alphabet = string.ascii_lowercase + string.digits
+    suffix = "".join(secrets.choice(alphabet) for _ in range(length))
     return f"{prefix}_{suffix}"
 
 
@@ -30,7 +30,8 @@ def generate_password(
         raise ValueError("Invalid password length parameters")
 
     alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + special_chars
-    length = random.randint(min_length, max(min_length, max_length))
+    length_range = max(min_length, max_length) - min_length
+    length = min_length + (secrets.randbelow(length_range + 1) if length_range > 0 else 0)
 
     while True:
         password = "".join(secrets.choice(alphabet) for _ in range(length))

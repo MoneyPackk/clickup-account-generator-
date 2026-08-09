@@ -1,5 +1,6 @@
 """Flask HTTP server for REST API access to the generator."""
 
+import secrets
 from functools import wraps
 from typing import Any, Callable
 
@@ -10,10 +11,9 @@ from src.api.responses import APIResponse
 from src.api.schemas import AccountPayload, GenerationResult
 from src.core.config import Settings
 from src.core.context import ContextManager, get_correlation_id
-from src.core.exceptions import ClickUpGeneratorError
+from src.core.exceptions import ClickUpGeneratorError, ValidationError
 from src.core.logger import get_logger, setup_logging
 from src.security.rate_limiter import RateLimiter
-from src.security.validation import AccountValidator
 
 logger = get_logger(__name__)
 app = Flask(__name__)
@@ -24,8 +24,34 @@ def configure_app(settings: Settings = None) -> Flask:
     settings = settings or Settings()
     setup_logging(settings)
     app.config["SETTINGS"] = settings
-    app.config["SECRET_KEY"] = "change-me-in-production"
+    # Require an explicitly configured secret key; refuse to start with an empty one.
+    if not settings.flask_secret_key:
+        raise RuntimeError(
+            "FLASK_SECRET_KEY environment variable must be set to a strong random value."
+        )
+    app.config["SECRET_KEY"] = settings.flask_secret_key
     return app
+
+
+def require_api_key(f: Callable[..., Any]) -> Callable[..., Any]:
+    """Decorator that enforces API key authentication on protected endpoints."""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        settings: Settings = app.config.get("SETTINGS", Settings())
+        configured_key = settings.api_key
+        if not configured_key:
+            # API key enforcement is disabled — allow through (development mode).
+            return f(*args, **kwargs)
+        provided_key = request.headers.get("X-API-Key")
+        # Reject immediately if the header is absent to avoid leaking timing
+        # information about the key length via compare_digest.
+        if not provided_key:
+            return jsonify({"success": False, "errors": [{"code": "UNAUTHORIZED", "message": "Invalid or missing API key"}]}), 401
+        # Use constant-time comparison to prevent timing attacks.
+        if not secrets.compare_digest(provided_key, configured_key):
+            return jsonify({"success": False, "errors": [{"code": "UNAUTHORIZED", "message": "Invalid or missing API key"}]}), 401
+        return f(*args, **kwargs)
+    return wrapper
 
 
 def with_correlation_id(f: Callable[..., Any]) -> Callable[..., Any]:
@@ -51,6 +77,7 @@ def ready():
 
 
 @app.route("/api/v1/accounts", methods=["POST"])
+@require_api_key
 @with_correlation_id
 def create_account():
     """Generate a new ClickUp account."""
@@ -90,6 +117,7 @@ def create_account():
 
 
 @app.route("/api/v1/accounts/batch", methods=["POST"])
+@require_api_key
 @with_correlation_id
 def create_batch():
     """Generate multiple ClickUp accounts."""
@@ -97,10 +125,13 @@ def create_batch():
     data = request.get_json(force=True, silent=True) or {}
     count = data.get("count", 1)
 
-    try:
-        AccountValidator().validate_username(str(count))
-    except Exception:
-        pass
+    if not isinstance(count, int) or count < 1 or count > 100:
+        response = APIResponse[list].error(
+            code="VALIDATION_ERROR",
+            message="count must be an integer between 1 and 100",
+            field="count",
+        )
+        return jsonify(response.model_dump()), 400
 
     generator = ClickUpAccountGenerator(settings=settings)
 
@@ -108,6 +139,9 @@ def create_batch():
         results = generator.generate_batch(count=count)
         response = APIResponse[list[GenerationResult]].ok(data=results)
         return jsonify(response.model_dump()), 201
+    except ValidationError as exc:
+        response = APIResponse.from_exception(exc)
+        return jsonify(response.model_dump()), 400
     except Exception as exc:
         response = APIResponse.from_exception(exc)
         return jsonify(response.model_dump()), 500
