@@ -1,0 +1,8 @@
+include README.md
+include LICENSE
+include .env.example
+include requirements.txt
+include requirements-dev.txt
+recursive-include config *.yaml
+recursive-include migrations *.py *.ini *.ini.with_secrets *.yaml README
+recursive-include docs *.md

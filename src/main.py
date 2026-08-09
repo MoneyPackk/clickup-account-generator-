@@ -1,4 +1,7 @@
-"""Main CLI entrypoint for the ClickUp account generator."""
+"""Legacy main CLI entrypoint for the ClickUp account generator.
+
+This module is kept for backward compatibility. Prefer using src.cli.commands.
+"""
 
 import argparse
 import sys
@@ -61,6 +64,7 @@ def main() -> int:
     """Run the account generator CLI."""
     args = parse_args()
     settings = Settings()
+    settings.clickup.headless = args.headless
     setup_logging(settings)
 
     if args.setup_db:
@@ -86,9 +90,13 @@ def main() -> int:
         results = generator.generate_batch(count=args.count)
 
         for result in results:
-            response = APIResponse(ok=result) if result.success else APIResponse.from_exception(
-                Exception(result.error_message or "Generation failed")
-            )
+            if result.success:
+                response = APIResponse.ok(data=result)
+            else:
+                response = APIResponse.error(
+                    code=result.error_code or "ACCOUNT_GENERATION_ERROR",
+                    message=result.error_message or "Generation failed",
+                )
             print(response.model_dump_json(indent=2))
 
         success_count = sum(1 for r in results if r.success)
