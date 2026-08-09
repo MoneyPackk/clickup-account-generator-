@@ -1,139 +1,170 @@
-"""Secrets management backend implementations."""
+"""Secrets management abstraction supporting env, Vault, and AWS."""
 
 import os
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 from src.core.config import SecretsSettings, Settings
 from src.core.exceptions import SecretRetrievalError
+from src.core.logger import get_logger
+
+logger = get_logger(__name__)
 
 
-class BaseSecretsManager(ABC):
-    """Abstract base class for secrets managers."""
+class SecretsBackend(ABC):
+    """Abstract secrets backend."""
 
     @abstractmethod
-    def get(self, key: str, default: Optional[str] = None) -> Optional[str]:
-        """Retrieve a secret value by key."""
+    def get_secret(self, key: str) -> Optional[str]:
+        """Retrieve a secret by key."""
         raise NotImplementedError
 
     @abstractmethod
-    def get_dict(self, key: str, default: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
-        """Retrieve a secret as a dictionary."""
+    def get_all_secrets(self) -> Dict[str, str]:
+        """Retrieve all secrets as a dictionary."""
         raise NotImplementedError
 
 
-class EnvironmentSecrets(BaseSecretsManager):
-    """Secrets manager backed by environment variables."""
+class EnvironmentSecretsBackend(SecretsBackend):
+    """Backend that reads secrets from environment variables."""
 
-    def get(self, key: str, default: Optional[str] = None) -> Optional[str]:
-        return os.getenv(key, default)
+    def get_secret(self, key: str) -> Optional[str]:
+        return os.environ.get(key)
 
-    def get_dict(self, key: str, default: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
-        value = os.getenv(key)
-        if value is None:
-            return default
-        return {"value": value}
+    def get_all_secrets(self) -> Dict[str, str]:
+        return dict(os.environ)
 
 
-class HashiCorpVaultSecrets(BaseSecretsManager):
-    """Secrets manager backed by HashiCorp Vault."""
+class VaultSecretsBackend(SecretsBackend):
+    """Backend for HashiCorp Vault (optional)."""
 
     def __init__(self, settings: SecretsSettings) -> None:
-        try:
-            import hvac
-        except ImportError as exc:
-            raise SecretRetrievalError(
-                "hvac package required for Vault integration. Install with 'pip install hvac'.",
-            ) from exc
-
         self.settings = settings
-        self.client = hvac.Client(
-            url=settings.vault_addr,
-            token=settings.vault_token,
-        )
+        self._client = None
 
-        if not self.client.is_authenticated():
-            raise SecretRetrievalError("Failed to authenticate with HashiCorp Vault")
+    def _get_client(self):
+        if self._client is None:
+            try:
+                import hvac
+                self._client = hvac.Client(
+                    url=self.settings.vault_addr,
+                    token=self.settings.vault_token,
+                )
+            except ImportError as exc:
+                raise SecretRetrievalError(
+                    "hvac library required for Vault backend",
+                    details={"error": str(exc)},
+                ) from exc
+        return self._client
 
-    def get(self, key: str, default: Optional[str] = None) -> Optional[str]:
+    def get_secret(self, key: str) -> Optional[str]:
         try:
-            response = self.client.secrets.kv.v2.read_secret_version(
-                path=f"{self.settings.vault_path}/{key}",
-            )
-            return response["data"]["data"].get("value", default)
+            client = self._get_client()
+            path = self.settings.vault_path or "secret/clickup-generator"
+            response = client.secrets.kv.v2.read_secret_version(path=path)
+            return response["data"]["data"].get(key)
         except Exception as exc:
             raise SecretRetrievalError(
-                f"Failed to retrieve secret '{key}' from Vault",
-                details={"vault_path": self.settings.vault_path},
+                "Failed to retrieve secret from Vault",
+                details={"key": key, "error": str(exc)},
             ) from exc
 
-    def get_dict(self, key: str, default: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+    def get_all_secrets(self) -> Dict[str, str]:
         try:
-            response = self.client.secrets.kv.v2.read_secret_version(
-                path=f"{self.settings.vault_path}/{key}",
-            )
+            client = self._get_client()
+            path = self.settings.vault_path or "secret/clickup-generator"
+            response = client.secrets.kv.v2.read_secret_version(path=path)
             return response["data"]["data"]
         except Exception as exc:
             raise SecretRetrievalError(
-                f"Failed to retrieve secret '{key}' from Vault",
-                details={"vault_path": self.settings.vault_path},
+                "Failed to retrieve secrets from Vault",
+                details={"error": str(exc)},
             ) from exc
 
 
-class AWSSecretsManager(BaseSecretsManager):
-    """Secrets manager backed by AWS Secrets Manager."""
+class AWSSecretsBackend(SecretsBackend):
+    """Backend for AWS Secrets Manager (optional)."""
 
     def __init__(self, settings: SecretsSettings) -> None:
-        try:
-            import boto3
-        except ImportError as exc:
-            raise SecretRetrievalError(
-                "boto3 package required for AWS Secrets Manager integration. Install with 'pip install boto3'.",
-            ) from exc
-
         self.settings = settings
-        self.client = boto3.client(
-            service_name="secretsmanager",
-            region_name=settings.aws_region,
-        )
+        self._client = None
 
-    def _get_secret(self, key: str) -> Optional[Dict[str, Any]]:
+    def _get_client(self):
+        if self._client is None:
+            try:
+                import boto3
+                self._client = boto3.client(
+                    "secretsmanager",
+                    region_name=self.settings.aws_region,
+                )
+            except ImportError as exc:
+                raise SecretRetrievalError(
+                    "boto3 library required for AWS backend",
+                    details={"error": str(exc)},
+                ) from exc
+        return self._client
+
+    def get_secret(self, key: str) -> Optional[str]:
         try:
             import json
-            response = self.client.get_secret_value(SecretId=f"{self.settings.aws_secret_name}/{key}")
+            client = self._get_client()
+            secret_name = self.settings.aws_secret_name or "clickup-generator"
+            response = client.get_secret_value(SecretId=secret_name)
+            secrets_dict = json.loads(response["SecretString"])
+            return secrets_dict.get(key)
+        except Exception as exc:
+            raise SecretRetrievalError(
+                "Failed to retrieve secret from AWS",
+                details={"key": key, "error": str(exc)},
+            ) from exc
+
+    def get_all_secrets(self) -> Dict[str, str]:
+        try:
+            import json
+            client = self._get_client()
+            secret_name = self.settings.aws_secret_name or "clickup-generator"
+            response = client.get_secret_value(SecretId=secret_name)
             return json.loads(response["SecretString"])
         except Exception as exc:
             raise SecretRetrievalError(
-                f"Failed to retrieve secret '{key}' from AWS Secrets Manager",
-                details={"secret_name": self.settings.aws_secret_name},
+                "Failed to retrieve secrets from AWS",
+                details={"error": str(exc)},
             ) from exc
 
-    def get(self, key: str, default: Optional[str] = None) -> Optional[str]:
-        secret = self._get_secret(key)
-        if secret is None:
-            return default
-        return secret.get("value", default)
 
-    def get_dict(self, key: str, default: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
-        return self._get_secret(key) or default
+class SecretsManager:
+    """Facade for retrieving secrets from configured backend."""
 
-
-def get_secret_manager(settings: Optional[Settings] = None) -> BaseSecretsManager:
-    """Factory function to return configured secrets manager."""
-    settings = settings or Settings()
-    backend = settings.secrets.backend
-
-    managers = {
-        "environment": EnvironmentSecrets,
-        "vault": HashiCorpVaultSecrets,
-        "aws": AWSSecretsManager,
+    BACKENDS = {
+        "environment": EnvironmentSecretsBackend,
+        "vault": VaultSecretsBackend,
+        "aws": AWSSecretsBackend,
     }
 
-    manager_class = managers.get(backend)
-    if manager_class is None:
-        raise SecretRetrievalError(
-            f"Unknown secrets backend: {backend}",
-            details={"available_backends": list(managers.keys())},
-        )
+    def __init__(self, settings: Optional[SecretsSettings] = None) -> None:
+        self.settings = settings or Settings().secrets
+        backend_class = self.BACKENDS.get(self.settings.backend)
+        if backend_class is None:
+            raise SecretRetrievalError(f"Unsupported secrets backend: {self.settings.backend}")
+        self.backend = backend_class(self.settings)
+        logger.info("Secrets manager initialized", backend=self.settings.backend)
 
-    return manager_class(settings.secrets)
+    def get_secret(self, key: str) -> Optional[str]:
+        """Get a secret value."""
+        return self.backend.get_secret(key)
+
+    def get_required_secret(self, key: str) -> str:
+        """Get a secret or raise an error if missing."""
+        value = self.get_secret(key)
+        if value is None:
+            raise SecretRetrievalError(f"Required secret not found: {key}")
+        return value
+
+    def get_all_secrets(self) -> Dict[str, str]:
+        """Get all available secrets."""
+        return self.backend.get_all_secrets()
+
+
+def get_secrets_manager(settings: Optional[SecretsSettings] = None) -> SecretsManager:
+    """Return a secrets manager instance."""
+    return SecretsManager(settings)

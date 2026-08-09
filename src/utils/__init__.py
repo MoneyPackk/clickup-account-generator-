@@ -1,10 +1,10 @@
-"""Utility helpers for the ClickUp account generator."""
+"""Utility helpers for the account generator."""
 
-from .helpers import generate_username, is_valid_url, mask_email, mask_password
+from .helpers import generate_password, generate_username, mask_email, sanitize_input
 
 __all__ = [
+    "generate_password",
     "generate_username",
-    "is_valid_url",
     "mask_email",
-    "mask_password",
+    "sanitize_input",
 ]

@@ -1,53 +1,72 @@
-"""Miscellaneous utility helpers."""
+"""General-purpose helper utilities."""
 
+import random
 import re
 import secrets
-from urllib.parse import urlparse
+import string
+from typing import Optional
 
 
-MASK_CHAR = "*"
-VISIBLE_PREFIX_LEN = 3
-VISIBLE_SUFFIX_LEN = 3
+SANITIZE_PATTERN = re.compile(r"[<>'\"&\r\n]|(--|;/|\*)")
 
 
-def generate_username(prefix: str = "user") -> str:
-    """Generate a unique username."""
-    token = secrets.token_hex(4)
-    return f"{prefix}_{token}"
+def generate_username(prefix: str = "user", length: int = 10) -> str:
+    """Generate a random username with a prefix and alphanumeric suffix."""
+    suffix = "".join(random.choices(string.ascii_lowercase + string.digits, k=length))
+    return f"{prefix}_{suffix}"
 
 
-def is_valid_url(url: str) -> bool:
-    """Check if a string is a valid HTTP/HTTPS URL."""
-    try:
-        result = urlparse(url)
-        return all([result.scheme in ("http", "https"), result.netloc])
-    except Exception:
-        return False
+def generate_password(
+    min_length: int = 16,
+    max_length: int = 64,
+    require_uppercase: bool = True,
+    require_lowercase: bool = True,
+    require_digits: bool = True,
+    require_special: bool = True,
+    special_chars: str = "!@#$%^&*()_+-=[]{}|;:,.<>?",
+) -> str:
+    """Generate a cryptographically secure password meeting policy requirements."""
+    if min_length < 8 or max_length < min_length:
+        raise ValueError("Invalid password length parameters")
+
+    alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + special_chars
+    length = random.randint(min_length, max(min_length, max_length))
+
+    while True:
+        password = "".join(secrets.choice(alphabet) for _ in range(length))
+        if require_uppercase and not any(c.isupper() for c in password):
+            continue
+        if require_lowercase and not any(c.islower() for c in password):
+            continue
+        if require_digits and not any(c.isdigit() for c in password):
+            continue
+        if require_special and not any(c in special_chars for c in password):
+            continue
+        return password
 
 
 def mask_email(email: str) -> str:
-    """Mask an email address for safe logging."""
-    if not isinstance(email, str) or "@" not in email:
-        return ""
+    """Mask the local part of an email address for logging."""
+    if "@" not in email:
+        return "***"
     local, domain = email.rsplit("@", 1)
-    if len(local) <= VISIBLE_PREFIX_LEN + VISIBLE_SUFFIX_LEN:
-        masked_local = local[:VISIBLE_PREFIX_LEN] + MASK_CHAR * max(1, len(local) - VISIBLE_PREFIX_LEN)
-    else:
-        masked_local = (
-            local[:VISIBLE_PREFIX_LEN]
-            + MASK_CHAR * (len(local) - VISIBLE_PREFIX_LEN - VISIBLE_SUFFIX_LEN)
-            + local[-VISIBLE_SUFFIX_LEN:]
-        )
-    return f"{masked_local}@{domain}"
+    if len(local) <= 2:
+        return f"***@{domain}"
+    return f"{local[0]}{'*' * (len(local) - 2)}{local[-1]}@{domain}"
 
 
-def mask_password(password: str) -> str:
-    """Mask a password for safe logging."""
-    if not isinstance(password, str):
-        return ""
-    return MASK_CHAR * len(password)
+def sanitize_input(value: str, max_length: int = 255) -> str:
+    """Sanitize untrusted string input."""
+    if not isinstance(value, str):
+        raise TypeError("Input must be a string")
+    value = value[:max_length]
+    value = SANITIZE_PATTERN.sub("", value)
+    return value.strip()
 
 
-def remove_control_chars(value: str) -> str:
-    """Remove control characters from a string."""
-    return re.sub(r"[\x00-\x1F\x7F]", "", value)
+def is_valid_domain(domain: str) -> bool:
+    """Check if a string looks like a valid domain."""
+    pattern = re.compile(
+        r"^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$"
+    )
+    return bool(pattern.match(domain))
