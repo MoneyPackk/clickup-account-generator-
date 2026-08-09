@@ -1,5 +1,6 @@
 """Prometheus metrics for monitoring account generation."""
 
+import threading
 from typing import Optional
 
 from prometheus_client import Counter, Gauge, Histogram, start_http_server
@@ -81,11 +82,14 @@ class GeneratorMetrics:
 
 
 _metrics: Optional[GeneratorMetrics] = None
+_metrics_lock = threading.Lock()
 
 
 def get_metrics() -> GeneratorMetrics:
     """Return the singleton metrics instance."""
     global _metrics
     if _metrics is None:
-        _metrics = GeneratorMetrics()
+        with _metrics_lock:
+            if _metrics is None:
+                _metrics = GeneratorMetrics()
     return _metrics

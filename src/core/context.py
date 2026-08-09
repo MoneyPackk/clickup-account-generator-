@@ -1,7 +1,6 @@
 """Request context management with correlation ID support."""
 
 import uuid
-from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Optional
 

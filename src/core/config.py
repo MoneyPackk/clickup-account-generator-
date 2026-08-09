@@ -9,19 +9,17 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class DatabaseSettings(BaseSettings):
     """Database connection settings."""
 
-    model_config = SettingsConfigDict(env_prefix="DATABASE_", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="",
+        extra="ignore",
+        populate_by_name=True,
+    )
 
     url: str = Field(default="sqlite:///./clickup_generator.db", alias="DATABASE_URL")
     pool_size: int = Field(default=5, alias="DATABASE_POOL_SIZE")
     pool_overflow: int = Field(default=10, alias="DATABASE_POOL_OVERFLOW")
     pool_recycle: int = Field(default=3600, alias="DATABASE_POOL_RECYCLE")
     echo: bool = Field(default=False, alias="DATABASE_ECHO")
-
-    model_config = SettingsConfigDict(
-        env_prefix="",
-        extra="ignore",
-        populate_by_name=True,
-    )
 
 
 class ClickUpSettings(BaseSettings):
