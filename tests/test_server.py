@@ -99,7 +99,7 @@ class TestApiKeyAuth:
                 json={"email": "u@example.com", "username": "u_abc", "password": "P@ssw0rd!1234567"},
                 headers={"X-API-Key": "test-api-key"},
             )
-        assert resp.status_code in (201, 500)  # not 401
+        assert resp.status_code == 201  # correct API key should succeed
 
     def test_health_bypasses_api_key(self, client_with_auth):
         """Health check must not require an API key."""

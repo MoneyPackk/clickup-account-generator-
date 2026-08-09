@@ -29,7 +29,7 @@ class TestDatabaseSettings:
 class TestClickUpSettings:
     def test_default_base_url(self):
         s = ClickUpSettings()
-        assert "clickup.com" in s.base_url
+        assert s.base_url == "https://app.clickup.com"
 
     def test_headless_default_true(self):
         s = ClickUpSettings()

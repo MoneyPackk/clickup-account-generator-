@@ -42,7 +42,11 @@ def require_api_key(f: Callable[..., Any]) -> Callable[..., Any]:
         if not configured_key:
             # API key enforcement is disabled — allow through (development mode).
             return f(*args, **kwargs)
-        provided_key = request.headers.get("X-API-Key", "")
+        provided_key = request.headers.get("X-API-Key")
+        # Reject immediately if the header is absent to avoid leaking timing
+        # information about the key length via compare_digest.
+        if not provided_key:
+            return jsonify({"success": False, "errors": [{"code": "UNAUTHORIZED", "message": "Invalid or missing API key"}]}), 401
         # Use constant-time comparison to prevent timing attacks.
         if not secrets.compare_digest(provided_key, configured_key):
             return jsonify({"success": False, "errors": [{"code": "UNAUTHORIZED", "message": "Invalid or missing API key"}]}), 401
