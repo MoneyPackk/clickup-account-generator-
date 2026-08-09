@@ -90,3 +90,11 @@ The `Settings` class (in `src/core/config.py`) loads values using [pydantic-sett
 | `METRICS_ENABLED` | `true` | Enable Prometheus metrics |
 | `PROMETHEUS_PORT` | `8000` | Port for the Prometheus metrics HTTP server |
 | `SENTRY_DSN` | *(empty)* | Sentry DSN for error tracking |
+
+---
+
+<div align="center">
+
+**💰 MONEYPACK 💰**
+
+</div>

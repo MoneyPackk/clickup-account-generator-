@@ -114,3 +114,11 @@ Store all secrets (`FLASK_SECRET_KEY`, `API_KEY`, `DATABASE_URL`) in a Kubernete
 ## Scaling
 
 The application is stateless — horizontal scaling is supported. Rate limiting uses an in-memory token bucket, so with multiple replicas you should switch to the Redis-backed `RedisRateLimiter` (not yet implemented; see `src/security/rate_limiter.py`).
+
+---
+
+<div align="center">
+
+**💰 MONEYPACK 💰**
+
+</div>

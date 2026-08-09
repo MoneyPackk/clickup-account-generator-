@@ -142,3 +142,11 @@ Generate multiple accounts.
 | `ACCOUNT_GENERATION_ERROR` | Account creation failed |
 | `BROWSER_ERROR` | WebDriver failure |
 | `INTERNAL_ERROR` | Unexpected server error |
+
+---
+
+<div align="center">
+
+**💰 MONEYPACK 💰**
+
+</div>

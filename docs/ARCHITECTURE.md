@@ -101,3 +101,11 @@ Client Request
   → APIResponse.ok(GenerationResult)
   → HTTP 201
 ```
+
+---
+
+<div align="center">
+
+**💰 MONEYPACK 💰**
+
+</div>

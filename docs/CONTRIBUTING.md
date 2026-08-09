@@ -61,3 +61,11 @@ mypy src
 - [ ] No secrets committed (run `git diff` and inspect)
 - [ ] `.env.example` updated if new env vars added
 - [ ] `docs/` updated if behaviour changed
+
+---
+
+<div align="center">
+
+**💰 MONEYPACK 💰**
+
+</div>

@@ -1,6 +1,19 @@
 <div align="center">
 
 ```
+███╗   ███╗ ██████╗ ███╗   ██╗███████╗██╗   ██╗██████╗  █████╗  ██████╗██╗  ██╗
+████╗ ████║██╔═══██╗████╗  ██║██╔════╝╚██╗ ██╔╝██╔══██╗██╔══██╗██╔════╝██║ ██╔╝
+██╔████╔██║██║   ██║██╔██╗ ██║█████╗   ╚████╔╝ ██████╔╝███████║██║     █████╔╝
+██║╚██╔╝██║██║   ██║██║╚██╗██║██╔══╝    ╚██╔╝  ██╔═══╝ ██╔══██║██║     ██╔═██╗
+██║ ╚═╝ ██║╚██████╔╝██║ ╚████║███████╗   ██║   ██║     ██║  ██║╚██████╗██║  ██╗
+╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝     ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
+```
+
+### 💰 A project by **MONEYPACK** 💰
+
+---
+
+```
  ██████╗██╗     ██╗ ██████╗██╗  ██╗██╗   ██╗██████╗
 ██╔════╝██║     ██║██╔════╝██║ ██╔╝██║   ██║██╔══██╗
 ██║     ██║     ██║██║     █████╔╝ ██║   ██║██████╔╝
@@ -286,8 +299,12 @@ Released under the **MIT License** — see [`LICENSE`](./LICENSE) for details.
 
 <div align="center">
 
-**Built with ❤️ by [MoneyPackk](https://github.com/MoneyPackk)**
+```
+💰  MONEYPACK  💰
+```
 
-*Use responsibly and in compliance with all applicable laws and platform terms of service.*
+**Built & maintained by [MONEYPACK](https://github.com/MoneyPackk)**
+
+*© MONEYPACK — Use responsibly and in compliance with all applicable laws and platform terms of service.*
 
 </div>
