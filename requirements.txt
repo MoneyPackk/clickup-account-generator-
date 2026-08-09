@@ -1,0 +1,51 @@
+# Web Automation
+selenium>=4.15.0
+webdriver-manager>=4.0.1
+
+# Configuration & Validation
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+python-dotenv>=1.0.0
+email-validator>=2.1.0
+
+# Database
+sqlalchemy>=2.0.23
+alembic>=1.13.0
+psycopg2-binary>=2.9.9
+
+# Security
+cryptography>=41.0.7
+itsdangerous>=2.1.2
+
+# Monitoring & Logging
+structlog>=23.2.0
+prometheus-client>=0.19.0
+sentry-sdk>=1.39.0
+opentelemetry-api>=1.21.0
+opentelemetry-sdk>=1.21.0
+
+# Resilience & Retries
+tenacity>=8.2.3
+circuitbreaker>=1.4.0
+
+# Server
+flask>=3.0.0
+gunicorn>=21.2.0
+
+# Async Support (optional)
+asyncio
+httpx>=0.25.2
+
+# Testing
+pytest>=7.4.3
+pytest-asyncio>=0.21.1
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+factory-boy>=3.3.0
+faker>=20.1.0
+
+# Code Quality
+black>=23.11.0
+flake8>=6.1.0
+mypy>=1.7.0
+pre-commit>=3.6.0
