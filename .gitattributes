@@ -1,0 +1,11 @@
+# Keep text payloads byte-stable across operating systems and Git configurations.
+* text=auto eol=lf
+
+# Preserve genuinely binary assets without newline conversion.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.tgz binary
