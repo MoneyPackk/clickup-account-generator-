@@ -1,6 +1,6 @@
 {
   "name": "moneypack-terminal",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Secure, auditable terminal AI assistant with a split-pane TUI and 31 local tools.",
   "license": "UNLICENSED",
