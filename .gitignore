@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+.mcp.json
+*.pem
+*.key
+
+# MoneyPack local state (normally stored under the user profile)
+.moneypack/
+.moneypack-sessions/
+.moneypack-memory.json
+.moneypack-todo.json
+.moneypack-mcp.json
+.surplus-cli.json
+
+# Runtime output
+*.log
+*.jsonl
+*.tgz
+coverage/
+dist/
+.tmp/
+tmp/
+.package-smoke/
+playwright-report/
+test-results/
+*.png
+$null
+
+# Language/tool caches
+__pycache__/
+*.py[cod]
+.npm/
+.cache/
+
+# Local agent and editor state
+.agents/
+.claude/
+.pandaos/
+.vscode/
+.idea/
+
+# Locally bundled runtimes and accidental scratch files
+Python/
+s.replace('class
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,58 @@
+{
+  "name": "moneypack-terminal",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Secure, auditable terminal AI assistant with a split-pane TUI and 31 local tools.",
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "browser-manager.js",
+    "autonomy.js",
+    "storage.js",
+    "moneypack-tui.js",
+    "moneypack-harness.js",
+    "harness",
+    "harness-cli.js",
+    "surplus-cli.js",
+    "moneypack-harness-tests.js",
+    "server.js",
+    "index.html",
+    "README.md",
+    "COMPATIBILITY_REPORT.md",
+    "LICENSE"
+  ],
+  "bin": {
+    "moneypack": "moneypack-tui.js",
+    "surplus": "surplus-cli.js",
+    "moneypack-mission": "harness-cli.js"
+  },
+  "scripts": {
+    "start": "node moneypack-tui.js",
+    "cli": "node surplus-cli.js start",
+    "dashboard": "node server.js",
+    "check": "node --check autonomy.js && node --check browser-manager.js && node --check storage.js && node --check moneypack-tui.js && node --check moneypack-harness.js && node --check harness/index.js && node --check harness-cli.js && node --check harness/mission-schema.js && node --check harness/mission-store.js && node --check harness/evidence-store.js && node --check harness/verifier.js && node --check harness/completion-judge.js && node --check harness/reporter.js && node --check moneypack-harness-tests.js && node --check moneypack-tests.js && node --check moneypack-integration-tests.js && node --check surplus-cli.js && node --check server.js",
+    "test:unit": "node moneypack-tests.js",
+    "test": "npm run check && npm run test:unit && npm run test:integration && npm run test:harness",
+    "smoke": "npm test",
+    "test:integration": "node moneypack-integration-tests.js",
+    "pack:check": "npm pack --dry-run",
+    "prepublishOnly": "npm test",
+    "test:harness": "node moneypack-harness-tests.js"
+  },
+  "dependencies": {
+    "playwright-core": "^1.62.1"
+  },
+  "keywords": [
+    "terminal",
+    "tui",
+    "ai-assistant",
+    "automation",
+    "mcp"
+  ],
+  "main": "autonomy.js",
+  "devDependencies": {},
+  "author": ""
+}

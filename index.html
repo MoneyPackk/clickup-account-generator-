@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b0d12">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230b0d12'/><rect x='8' y='8' width='84' height='84' rx='18' fill='url(%23g)'/><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop stop-color='%237c5cff'/><stop offset='1' stop-color='%23b18cff'/></linearGradient></defs></svg>">
+  <title>Surplus Intelligence · Control Panel</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  :root {
+    --bg: #090b0f;
+    --surface: #11141b;
+    --surface-2: #181c24;
+    --surface-3: #1f232d;
+    --border: rgba(255,255,255,0.07);
+    --border-strong: rgba(255,255,255,0.13);
+    --text: #e8ebf0;
+    --text-dim: #9aa3b2;
+    --text-faint: #6b7383;
+    /* Warm violet — earns the accent role, not the generic blue-violet. */
+    --accent: #936dff;
+    --accent-2: #7c5cff;
+    --accent-soft: rgba(147,109,255,0.14);
+    --accent-glow: rgba(147,109,255,0.32);
+    /* Mint-teal — functional second role for positive states and pricing. */
+    --mint: #2aecb6;
+    --mint-soft: rgba(42,236,182,0.12);
+    --green: #3ddc97;
+    --green-soft: rgba(61,220,151,0.12);
+    --amber: #f5b85a;
+    --red: #ff6b6b;
+    --radius: 14px;
+    --mono: 'SF Mono', ui-monospace, 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+
+    /* ── Type scale (Inter, 1.25× rhythm) ── */
+    --step-4: 18px;  /* logo letter */
+    --step-3: 16px;  /* brand heading, selected model name */
+    --step-2: 15px;  /* model-name in card, stat values */
+    --step-1: 14px;  /* panel headings, price-table body */
+    --step-0: 13px;  /* body copy, config labels, form inputs */
+    --xs: 10.5px;    /* captions, stat labels, toolbar icons */
+    --text-label: 11px;
+
+    /* Semantic aliases — wired to elements below */
+    --text-body: var(--step-0);
+    --text-heading: var(--step-1);
+    --text-display: var(--step-3);
+    --text-mono: var(--step-0);
+
+    /* ── Motion ── */
+    /* Consistent physics for the whole surface. transform + opacity only. */
+    --ease-out: cubic-bezier(0.16, 0.8, 0.2, 1);   /* standard deceleration (quart-like) */
+    --ease-in: cubic-bezier(0.87, 0, 0.97, 0);     /* acceleration; for state-change entrances */
+    --easeInOut: cubic-bezier(0.4, 0, 0.2, 1);
+    --focus-ring: 0 0 0 3px rgba(147, 109, 255, 0.45);
+  }
+
+  /* Reduced motion: strip spatial movement, keep functional fades and loading. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    .btn:hover { transform: scale(1) !important; }
+    .model:hover { transform: none !important; }
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--sans);
+    font-size: var(--text-body);
+    line-height: 1.55;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ambient glow */
+  .ambient {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 70% 50% at 15% 0%, rgba(124,92,255,0.12), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 90% 100%, rgba(61,220,151,0.08), transparent 60%);
+  }
+
+  .app { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 36px 28px 80px; }
+
+  /* ── Header ── */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 20px; flex-wrap: wrap; margin-bottom: 36px;
+  }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .logo {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--mint));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: var(--step-4); color: #fff;
+    box-shadow: 0 6px 24px -6px var(--accent-glow);
+  }
+  .brand h1 { font-size: var(--text-display); font-weight: 700; letter-spacing: -0.2px; line-height: 1.2; }
+  .brand p { font-size: var(--xs); color: var(--text-faint); margin-top: 3px; line-height: 1.45; }
+
+  .key-bar {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 7px 8px 7px 14px; min-width: 320px;
+  }
+  .key-label {
+    display: block; font-size: var(--text-label); font-weight: 700; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 4px;
+  }
+  .key-help { font-size: var(--xs); color: var(--text-faint); margin-top: 5px; }
+  .key-wrap { display: flex; flex-direction: column; align-items: stretch; }
+  .key-bar input {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--text); font-family: var(--mono); font-size: var(--step-0);
+  }
+  .key-bar input::placeholder { color: var(--text-faint); }
+  .key-pill {
+    font-size: var(--xs); font-weight: 600; padding: 4px 9px; border-radius: 100px;
+    background: var(--surface-3); color: var(--text-dim); white-space: nowrap;
+  }
+  .key-pill.set { background: var(--green-soft); color: var(--green); }
+  .btn {
+    font-family: var(--sans); font-size: var(--step-0); font-weight: 600;
+    border: 1px solid var(--border-strong); background: var(--surface-2);
+    color: var(--text); padding: 8px 14px; border-radius: 9px; cursor: pointer;
+    transition: border-color 0.15s var(--ease-out),
+                background-color 0.15s var(--ease-out),
+                box-shadow 0.15s var(--ease-out),
+                transform 0.15s var(--ease-out);
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--accent); background: var(--surface-3); }
+  .btn:active { transform: scale(0.97); }
+  .btn:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+  .btn.primary {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+    box-shadow: 0 4px 16px -6px var(--accent-glow);
+  }
+  .btn.primary:hover { background: var(--accent-2); border-color: var(--accent-2); }
+  .btn.primary:focus-visible { outline: var(--focus-ring); }
+  .btn.ghost {
+    background: transparent; border-color: var(--border);
+    color: var(--text-dim);
+  }
+  .btn.ghost:hover { color: var(--text); background: var(--surface-2); }
+  .btn.small { padding: 6px 11px; font-size: var(--xs); border-radius: 7px; }
+
+  /* ── Layout ── */
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 920px) { .grid { grid-template-columns: 1fr; } }
+  @media (max-width: 620px) {
+    .app { padding: 18px 14px 56px; }
+    .key-wrap, .key-bar { width: 100%; min-width: 0; }
+  }
+
+  .panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 18px; border-bottom: 1px solid var(--border);
+  }
+  .panel-head h2 { font-size: var(--step-1); font-weight: 600; letter-spacing: -0.1px; }
+  .panel-head .meta { font-size: var(--xs); color: var(--text-faint); font-variant-numeric: tabular-nums; }
+  .panel-body { padding: 16px 18px; }
+
+  /* ── Search / filters ── */
+  .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .search {
+    flex: 1; min-width: 180px; position: relative;
+  }
+  .search input {
+    width: 100%; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 9px; padding: 9px 12px 9px 34px; color: var(--text);
+    font-size: var(--text-body); outline: none;
+    transition: border-color 0.18s var(--ease-out), background-color 0.18s var(--ease-out);
+  }
+  .search input:focus { border-color: var(--accent); outline: var(--focus-ring); outline-offset: 2px; }
+  .search input::placeholder { color: var(--text-faint); }
+  .search svg {
+    position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+    width: 15px; height: 15px; color: var(--text-faint);
+  }
+  select {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 9px; padding: 9px 12px; color: var(--text); font-size: var(--text-body);
+    outline: none; cursor: pointer; font-family: var(--sans);
+  }
+  select:focus { border-color: var(--accent); outline: var(--focus-ring); outline-offset: 2px; }
+
+  /* ── Model list ── */
+  .model-list { max-height: 560px; overflow-y: auto; margin: 0 -18px; padding: 0 18px; }
+  .model-list::-webkit-scrollbar { width: 8px; }
+  .model-list::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 100px; }
+  .model-list::-webkit-scrollbar-track { background: transparent; }
+
+  .model {
+    display: grid; grid-template-columns: 1fr auto; gap: 6px 12px;
+    padding: 13px 14px; border: 1px solid var(--border); border-radius: 11px;
+    margin-bottom: 8px; cursor: pointer;
+    transition: border-color 0.15s var(--ease-out),
+                background-color 0.15s var(--ease-out),
+                transform 0.15s var(--ease-out),
+                box-shadow 0.15s var(--ease-out);
+    background: var(--surface-2);
+  }
+  .model:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+  .model:active { transform: scale(0.98); }
+  .model.active {
+    border-color: var(--accent); background: var(--accent-soft);
+    box-shadow: 0 0 0 1px var(--accent), 0 6px 24px -10px var(--accent-glow);
+  }
+  .model-name { font-size: var(--step-2); font-weight: 600; letter-spacing: -0.2px; }
+  .model-desc { font-size: var(--xs); color: var(--text-dim); grid-column: 1 / -1; margin-top: 2px; }
+  .model-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .tag {
+    font-size: var(--xs); font-weight: 600; padding: 2px 7px; border-radius: 5px;
+    background: var(--surface-3); color: var(--text-dim); letter-spacing: 0.2px;
+  }
+  .tag.vision { background: rgba(194,125,255,0.16); color: var(--accent); }
+  .tag.reason { background: rgba(245,184,90,0.16); color: var(--amber); }
+  .tag.tools { background: rgba(61,220,151,0.16); color: var(--green); }
+  .model-price { text-align: right; font-family: var(--mono); font-size: var(--step-1); font-weight: 500; color: var(--text-dim); }
+
+  .empty {
+    text-align: center; padding: 40px 20px; color: var(--text-faint); font-size: var(--text-body);
+    line-height: 1.5;
+  }
+  .empty-sub { font-size: var(--xs); color: var(--text-dim); }
+  .spinner {
+    width: 22px; height: 22px; border: 2.5px solid var(--surface-3);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 1.4s linear infinite; margin: 0 auto 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Config panel ── */
+  .selected-card { margin-bottom: 16px; }
+  .selected-name {
+    font-family: var(--mono); font-size: var(--text-display); font-weight: 700; letter-spacing: -0.2px;
+  }
+  .selected-fam { font-size: var(--xs); color: var(--text-dim); margin-top: 3px; line-height: 1.45; }
+  .selected-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 14px; }
+  .stat-cell {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px;
+  }
+  .stat-cell .v { font-size: var(--step-1); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat-cell .l { font-size: var(--text-label); color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.6px; margin-top: 3px; }
+
+  .tabs {
+    display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap;
+    border-bottom: 1px solid var(--border); padding-bottom: 0;
+  }
+  .tab {
+    font-size: var(--xs); font-weight: 600; padding: 8px 13px;
+    background: transparent; border: none; color: var(--text-dim); cursor: pointer;
+    transition: color 0.15s var(--ease-out),
+                border-color 0.15s var(--ease-out);
+    font-family: var(--sans); position: relative;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); }
+  .tab.active::after {
+    content: ""; position: absolute; bottom: -1px; left: 10px; right: 10px;
+    height: 2px; background: var(--accent); border-radius: 1px;
+  }
+  .tab:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+
+  .code-wrap { position: relative; }
+  pre {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px; overflow-x: auto; font-family: var(--mono); font-size: var(--text-mono);
+    line-height: 1.65; color: #d7dce6; max-height: 320px;
+  }
+  pre .k { color: #b18cff; }
+  pre .s { color: #3ddc97; }
+  pre .c { color: #6b7383; }
+  .copy {
+    position: absolute; top: 10px; right: 10px;
+  }
+
+  /* ── Playground ── */
+  .pg-input { display: flex; gap: 10px; margin-bottom: 12px; }
+  .pg-input textarea {
+    flex: 1; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 11px 13px; color: var(--text); font-size: var(--text-body);
+    font-family: var(--sans); resize: vertical; min-height: 70px; max-height: 200px; outline: none;
+    transition: border-color 0.18s var(--ease-out);
+  }
+  .pg-input textarea:focus { border-color: var(--accent); outline: var(--focus-ring); outline-offset: 2px; }
+  .pg-input textarea::placeholder { color: var(--text-faint); }
+  .pg-controls { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+  .pg-control { display: flex; align-items: center; gap: 7px; font-size: var(--xs); color: var(--text-dim); }
+  .pg-control input[type=range] { width: 90px; accent-color: var(--accent); }
+  .pg-control input[type=number] {
+    width: 70px; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 7px; padding: 5px 8px; color: var(--text); font-size: var(--xs); outline: none;
+  }
+  .pg-stream { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+  .pg-stream input { accent-color: var(--accent); }
+
+  .pg-out {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; min-height: 120px; max-height: 280px; overflow-y: auto;
+    font-size: var(--text-body); line-height: 1.6; white-space: pre-wrap; word-break: break-word;
+    opacity: 0; transform: translateY(6px);
+    transition: opacity 0.18s var(--ease-out), transform 0.28s var(--ease-out);
+  }
+  .pg-out.live { opacity: 1; transform: translateY(0); }
+  .pg-out.placeholder { color: var(--text-faint); font-style: italic; }
+  .pg-out .err { color: var(--red); }
+  .pg-out .label { color: var(--text-faint); font-size: var(--xs); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
+
+  .pg-stats {
+    display: flex; gap: 16px; margin-top: 10px; font-size: var(--xs); color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Prices table ── */
+  .price-table { width: 100%; border-collapse: collapse; font-size: var(--step-0); }
+  .price-table th {
+    text-align: left; padding: 9px 12px; color: var(--text-faint); font-weight: 600;
+    font-size: var(--text-label); text-transform: uppercase; letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface);
+  }
+  .price-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .price-table tr:hover td { background: var(--surface-2); }
+  .price-table .pm { font-family: var(--mono); font-weight: 600; }
+  .price-table .pv { color: var(--text-dim); font-size: var(--xs); }
+  .price-table .num { font-variant-numeric: tabular-nums; text-align: right; }
+  .price-scroll { max-height: 420px; overflow-y: auto; margin: 0 -18px; padding: 0; }
+  .price-scroll::-webkit-scrollbar { width: 8px; }
+  .price-scroll::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 100px; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(24px) scale(0.95);
+    background: var(--surface-3); border: 1px solid var(--border-strong);
+    color: var(--text); padding: 10px 18px; border-radius: 100px; font-size: var(--xs);
+    font-weight: 500; opacity: 0;
+    transition: opacity 0.22s var(--ease-out), transform 0.36s var(--ease-out);
+    z-index: 100; box-shadow: 0 12px 40px -8px rgba(0,0,0,0.5);
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) scale(1); }
+  .toast.ok { border-color: var(--green); }
+  .toast.err { border-color: var(--red); }
+
+  .hint {
+    font-size: var(--xs); color: var(--text-faint); margin-top: 10px; line-height: 1.5;
+  }
+  .hint a { color: var(--accent); text-decoration: none; }
+  .hint a:hover { text-decoration: underline; }
+
+  .section-title {
+    font-size: var(--xs); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-faint); margin: 22px 0 12px;
+  }
+
+  /* iOS Safari: any sub-16px form font triggers viewport zoom on focus.
+     Bump inputs/selects/textareas to 16px on narrow screens so focus stays put. */
+  @media (max-width: 640px) {
+    input, select, textarea { font-size: 16px !important; }
+  }
+</style>
+</head>
+<body>
+<div class="ambient"></div>
+<div class="app">
+
+  <header>
+    <div class="brand">
+      <div class="logo">S</div>
+      <div>
+        <h1>Surplus Intelligence</h1>
+        <p>Open market for AI models · one key, one base URL, every provider</p>
+      </div>
+    </div>
+    <div class="key-wrap">
+      <label class="key-label" for="apiKey">Connect your Surplus API key</label>
+      <div class="key-bar">
+        <input id="apiKey" type="password" placeholder="Paste your inf_… key here" autocomplete="off" spellcheck="false">
+        <span class="key-pill" id="keyPill">not set</span>
+        <button class="btn small primary" id="saveKey">Save key</button>
+      </div>
+      <div class="key-help">Your key stays in this browser and is sent only to Surplus.</div>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- ── LEFT: model catalog ── -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Model Catalog</h2>
+        <span class="meta" id="catalogMeta">—</span>
+      </div>
+      <div class="panel-body">
+        <div class="filters">
+          <div class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input id="searchBox" type="text" placeholder="Search models… (claude, gpt, vision, reasoning)">
+          </div>
+          <select id="filterCap">
+            <option value="">All capabilities</option>
+            <option value="vision">Vision</option>
+            <option value="reasoning">Reasoning</option>
+            <option value="tools">Tool use</option>
+            <option value="streaming">Streaming</option>
+          </select>
+          <select id="sortBy">
+            <option value="name">Sort: Name</option>
+            <option value="cheapIn">Sort: Cheapest input</option>
+            <option value="cheapOut">Sort: Cheapest output</option>
+            <option value="context">Sort: Longest context</option>
+          </select>
+        </div>
+        <div class="model-list" id="modelList">
+          <div class="empty"><div class="spinner"></div>Loading live catalog…</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── RIGHT: config + playground ── -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Active Model & Config</h2>
+        <span class="meta" id="activeMeta">none selected</span>
+      </div>
+      <div class="panel-body">
+        <div class="selected-card" id="selectedCard">
+          <div class="selected-name" id="selName">Pick a model →</div>
+          <div class="selected-fam" id="selFam">Select any model from the catalog to generate ready-to-use config and test it live.</div>
+          <div class="selected-stats" id="selStats" style="display:none">
+            <div class="stat-cell"><div class="v" id="statIn">—</div><div class="l">In $/M tok</div></div>
+            <div class="stat-cell"><div class="v" id="statOut">—</div><div class="l">Out $/M tok</div></div>
+            <div class="stat-cell"><div class="v" id="statCtx">—</div><div class="l">Context</div></div>
+          </div>
+        </div>
+
+        <div class="tabs" id="configTabs">
+          <button class="tab active" data-tab="openai">OpenAI SDK</button>
+          <button class="tab" data-tab="curl">cURL</button>
+          <button class="tab" data-tab="claude">Claude Code</button>
+          <button class="tab" data-tab="cursor">Cursor</button>
+          <button class="tab" data-tab="aider">Aider</button>
+        </div>
+
+        <div class="code-wrap">
+          <pre id="codeBlock"></pre>
+          <button class="btn small copy" id="copyCode">Copy</button>
+        </div>
+
+        <div class="section-title">Live test playground</div>
+        <div class="pg-input">
+          <textarea id="pgPrompt" placeholder="Type a test prompt for the active model…">Say one sentence about what makes a good API.</textarea>
+        </div>
+        <div class="pg-controls">
+          <div class="pg-control">
+            <label>temp</label>
+            <input type="range" id="pgTemp" min="0" max="2" step="0.1" value="0.7">
+            <span id="pgTempVal">0.7</span>
+          </div>
+          <div class="pg-control">
+            <label>max tokens</label>
+            <input type="number" id="pgMaxTok" value="200" min="1" max="32000">
+          </div>
+          <label class="pg-stream"><input type="checkbox" id="pgStream" checked> stream</label>
+          <button class="btn primary small" id="pgRun" style="margin-left:auto">Run ▸</button>
+        </div>
+        <div class="pg-out placeholder" id="pgOut">Response will appear here. Requires a saved API key.</div>
+        <div class="pg-stats" id="pgStats" style="display:none"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ── Prices ── -->
+  <section class="panel" style="margin-top:20px">
+    <div class="panel-head">
+      <h2>Marketplace Prices & Provider Routing</h2>
+      <span class="meta" id="priceMeta">—</span>
+    </div>
+    <div class="panel-body">
+      <p class="hint" style="margin-bottom:14px">
+        Each model can be served by multiple providers (Venice, Bankr, Anthropic, Bedrock…).
+        Surplus auto-routes to the cheapest available offer. Below are live market rates in $/M tokens.
+      </p>
+      <div class="price-scroll" id="priceScroll">
+        <div class="empty"><div class="spinner"></div>Loading market prices…</div>
+      </div>
+    </div>
+  </section>
+
+  <p class="hint">
+    Base URL: <code style="color:var(--accent)">https://api.surplusintelligence.ai/v1</code> ·
+    Get a key at <a href="https://www.surplusintelligence.ai/buy" target="_blank" rel="noopener">surplusintelligence.ai/buy</a> ·
+    Docs: <a href="https://www.surplusintelligence.ai/docs" target="_blank" rel="noopener">/docs</a>
+    <br>Your API key is stored only in this browser (localStorage) and sent solely to Surplus's API.
+  </p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+  // Use the local proxy when running on localhost to avoid browser CORS blocks.
+  const API = location.hostname === "localhost" || location.hostname === "127.0.0.1"
+    ? "/api/v1" : "https://api.surplusintelligence.ai/v1";
+  const LS_KEY = "surplus_api_key";
+  const LS_MODEL = "surplus_active_model";
+
+  const $ = (id) => document.getElementById(id);
+  const apiKeyEl = $("apiKey"), keyPill = $("keyPill"), saveKeyBtn = $("saveKey");
+  const searchBox = $("searchBox"), filterCap = $("filterCap"), sortBy = $("sortBy");
+  const modelList = $("modelList"), catalogMeta = $("catalogMeta");
+  const selName = $("selName"), selFam = $("selFam"), selStats = $("selStats");
+  const statIn = $("statIn"), statOut = $("statOut"), statCtx = $("statCtx");
+  const activeMeta = $("activeMeta"), codeBlock = $("codeBlock"), copyCode = $("copyCode");
+  const pgPrompt = $("pgPrompt"), pgTemp = $("pgTemp"), pgTempVal = $("pgTempVal");
+  const pgMaxTok = $("pgMaxTok"), pgStream = $("pgStream"), pgRun = $("pgRun");
+  const pgOut = $("pgOut"), pgStats = $("pgStats");
+  const priceScroll = $("priceScroll"), priceMeta = $("priceMeta");
+  const toastEl = $("toast");
+
+  let models = [];
+  let activeModel = null;
+  let activeTab = "openai";
+
+  /* ── helpers ── */
+  function toast(msg, kind) {
+    toastEl.textContent = msg;
+    toastEl.className = "toast show " + (kind || "");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => { toastEl.className = "toast"; }, 2200);
+  }
+  function getKey() { return localStorage.getItem(LS_KEY) || ""; }
+  function fmtPrice(perToken) {
+    // perToken is USD per single token; $/M = perToken * 1,000,000
+    const m = (Number(perToken) || 0) * 1_000_000;
+    if (m === 0) return "$0.00";
+    if (m < 0.01) return "$" + m.toFixed(4);
+    if (m < 1) return "$" + m.toFixed(3);
+    return "$" + m.toFixed(2);
+  }
+  function fmtCtx(n) {
+    n = Number(n) || 0;
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(n % 1_000_000 ? 1 : 0) + "M";
+    if (n >= 1000) return Math.round(n / 1000) + "K";
+    return String(n);
+  }
+  function familyOf(id, m) {
+    const name = (m && m.name) || id;
+    const n = name.toLowerCase();
+    if (n.includes("claude")) return "Anthropic · Claude";
+    if (n.includes("gpt")) return "OpenAI · GPT";
+    if (n.includes("gemini")) return "Google · Gemini";
+    if (n.includes("grok")) return "xAI · Grok";
+    if (n.includes("deepseek")) return "DeepSeek";
+    if (n.includes("qwen")) return "Alibaba · Qwen";
+    if (n.includes("llama")) return "Meta · Llama";
+    if (n.includes("mistral") || n.includes("minimax") || n.includes("mercury")) return "Mistral / MiniMax";
+    if (n.includes("kimi")) return "Moonshot · Kimi";
+    if (n.includes("gemma")) return "Google · Gemma";
+    if (n.includes("glm")) return "Zhipu · GLM";
+    if (n.includes("venice")) return "Venice";
+    if (n.includes("hermes")) return "Nous · Hermes";
+    if (n.includes("nemotron")) return "NVIDIA · Nemotron";
+    return "Other";
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+  }
+
+  /* ── key management ── */
+  function refreshKeyPill() {
+    const k = getKey();
+    if (k) { keyPill.textContent = "saved · " + k.slice(0, 6) + "…"; keyPill.className = "key-pill set"; apiKeyEl.value = k; }
+    else { keyPill.textContent = "not set"; keyPill.className = "key-pill"; }
+  }
+  saveKeyBtn.addEventListener("click", () => {
+    const v = apiKeyEl.value.trim();
+    if (!v) { localStorage.removeItem(LS_KEY); refreshKeyPill(); toast("Key cleared", "ok"); return; }
+    if (!v.startsWith("inf_")) { toast("Keys usually start with inf_ — save anyway?", "err"); }
+    localStorage.setItem(LS_KEY, v);
+    refreshKeyPill();
+    toast("API key saved in this browser", "ok");
+  });
+  apiKeyEl.addEventListener("keydown", (e) => { if (e.key === "Enter") saveKeyBtn.click(); });
+
+  /* ── load catalog ── */
+  async function loadCatalog() {
+    modelList.innerHTML = '<div class="empty"><div class="spinner"></div>Loading live catalog…</div>';
+    try {
+      const res = await fetch(API + "/models");
+      if (!res.ok) {
+        if (res.status === 403) throw new Error("Surplus temporarily denied the public catalog (HTTP 403). Refresh later or use the model name from your Surplus account.");
+        throw new Error("HTTP " + res.status);
+      }
+      const data = await res.json();
+      models = (data.data || []).filter(m => m && m.id);
+      catalogMeta.textContent = models.length + " models live";
+      renderModels();
+    } catch (e) {
+      modelList.innerHTML = '<div class="empty">Could not load catalog.<br><span class="empty-sub">' + escapeHtml(e.message) + '</span></div>';
+    }
+  }
+
+  function renderModels() {
+    const q = searchBox.value.trim().toLowerCase();
+    const cap = filterCap.value;
+    let list = models.filter(m => {
+      if (q) {
+        const hay = (m.id + " " + (m.name || "") + " " + (m.description || "") + " " + familyOf(m.id, m)).toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (cap) {
+        const feats = (m.supported_features || []);
+        if (!feats.includes(cap)) return false;
+      }
+      return true;
+    });
+
+    const s = sortBy.value;
+    list.sort((a, b) => {
+      if (s === "cheapIn") return (parseFloat(a.pricing.prompt) || 0) - (parseFloat(b.pricing.prompt) || 0);
+      if (s === "cheapOut") return (parseFloat(a.pricing.completion) || 0) - (parseFloat(b.pricing.completion) || 0);
+      if (s === "context") return (b.context_length || 0) - (a.context_length || 0);
+      return (a.id || "").localeCompare(b.id || "");
+    });
+
+    if (!list.length) {
+      modelList.innerHTML = '<div class="empty">No models match your filters.</div>';
+      return;
+    }
+
+    modelList.innerHTML = list.slice(0, 200).map(m => {
+      const feats = m.supported_features || [];
+      const tags = [];
+      if (feats.includes("vision")) tags.push('<span class="tag vision">vision</span>');
+      if (feats.includes("reasoning")) tags.push('<span class="tag reason">reason</span>');
+      if (feats.includes("tools")) tags.push('<span class="tag tools">tools</span>');
+      const active = activeModel && m.id === activeModel.id ? " active" : "";
+      return '<div class="model' + active + '" data-id="' + escapeHtml(m.id) + '">'
+        + '<div class="model-name">' + escapeHtml(m.id) + '</div>'
+        + '<div class="model-price">' + fmtPrice(m.pricing.prompt) + ' / ' + fmtPrice(m.pricing.completion) + '</div>'
+        + (m.description ? '<div class="model-desc">' + escapeHtml(m.description) + '</div>' : '')
+        + '<div class="model-meta">'
+        + '<span class="tag">' + escapeHtml(familyOf(m.id, m)) + '</span>'
+        + '<span class="tag">' + fmtCtx(m.context_length) + ' ctx</span>'
+        + tags.join("") + '</div></div>';
+    }).join("");
+
+    modelList.querySelectorAll(".model").forEach(el => {
+      el.addEventListener("click", () => selectModel(el.dataset.id));
+    });
+  }
+
+  /* ── select model ── */
+  function selectModel(id) {
+    const m = models.find(x => x.id === id);
+    if (!m) return;
+    activeModel = m;
+    localStorage.setItem(LS_MODEL, id);
+    selName.textContent = m.id;
+    selFam.textContent = familyOf(m.id, m) + (m.description ? " — " + m.description : "");
+    statIn.textContent = fmtPrice(m.pricing.prompt);
+    statOut.textContent = fmtPrice(m.pricing.completion);
+    statCtx.textContent = fmtCtx(m.context_length);
+    selStats.style.display = "grid";
+    activeMeta.textContent = m.id;
+    renderModels();
+    renderConfig();
+    toast("Switched to " + m.id, "ok");
+  }
+
+  /* ── config snippets ── */
+  function renderConfig() {
+    if (!activeModel) { codeBlock.innerHTML = '<span class="c">// Select a model to generate config</span>'; return; }
+    const id = activeModel.id;
+    const key = getKey() || "inf_YOUR_KEY";
+    const m = activeModel;
+    let body;
+    switch (activeTab) {
+      case "openai":
+        body =
+'<span class="c"># Python — pip install openai</span>\n' +
+'<span class="k">from</span> openai <span class="k">import</span> OpenAI\n\n' +
+'client = OpenAI(\n  api_key=<span class="s">"' + key + '"</span>,\n  base_url=<span class="s">"' + API + '"</span>,\n)\n\n' +
+'resp = client.chat.completions.create(\n  model=<span class="s">"' + id + '"</span>,\n  messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">"Hello!"</span>}],\n)\n' +
+'print(resp.choices[0].message.content)\n\n' +
+'<span class="c">// Node.js</span>\n' +
+'<span class="k">import</span> OpenAI <span class="k">from</span> <span class="s">"openai"</span>;\n' +
+'<span class="k">const</span> client = <span class="k">new</span> OpenAI({ apiKey: <span class="s">"' + key + '"</span>, baseURL: <span class="s">"' + API + '"</span> });\n' +
+'<span class="k">const</span> r = <span class="k">await</span> client.chat.completions.create({ model: <span class="s">"' + id + '"</span>, messages: [{ role: <span class="s">"user"</span>, content: <span class="s">"Hello!"</span> }] });\n' +
+'console.log(r.choices[0].message.content);';
+        break;
+      case "curl":
+        body =
+'<span class="c"># Streaming chat completion</span>\n' +
+'curl ' + API + '/chat/completions \\\n' +
+'  -H <span class="s">"Authorization: Bearer ' + key + '"</span> \\\n' +
+'  -H <span class="s">"Content-Type: application/json"</span> \\\n' +
+'  -d \'{<span class="s">"model"</span>: <span class="s">"' + id + '"</span>, <span class="s">"messages"</span>: [{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">"Hello!"</span>}], <span class="s">"stream"</span>: true}\'';
+        break;
+      case "claude":
+        body =
+'<span class="c"># Claude Code — point it at Surplus via the /anthropic skin</span>\n' +
+'<span class="c"># Surplus exposes an Anthropic-compatible endpoint at /anthropic</span>\n\n' +
+'<span class="c"># Option A: environment variables (recommended)</span>\n' +
+'export ANTHROPIC_BASE_URL=<span class="s">"https://api.surplusintelligence.ai/anthropic"</span>\n' +
+'export ANTHROPIC_AUTH_TOKEN=<span class="s">"' + key + '"</span>\n' +
+'export ANTHROPIC_MODEL=<span class="s">"' + id + '"</span>\n\n' +
+'<span class="c"># Option B: settings.json (~/.claude/settings.json)</span>\n' +
+'{\n' +
+'  <span class="s">"env"</span>: {\n' +
+'    <span class="s">"ANTHROPIC_BASE_URL"</span>: <span class="s">"https://api.surplusintelligence.ai/anthropic"</span>,\n' +
+'    <span class="s">"ANTHROPIC_AUTH_TOKEN"</span>: <span class="s">"' + key + '"</span>,\n' +
+'    <span class="s">"ANTHROPIC_MODEL"</span>: <span class="s">"' + id + '"</span>\n' +
+'  }\n' +
+'}\n\n' +
+'<span class="c"># Then launch: claude</span>\n' +
+'<span class="c"># Run `claude` from any project — it now routes through Surplus.</span>';
+        break;
+      case "cursor":
+        body =
+'<span class="c"># Cursor → Settings → Models → Override OpenAI base URL</span>\n' +
+'Base URL: ' + API + '\n' +
+'API Key:  ' + key + '\n' +
+'Model:    ' + id + '\n\n' +
+'<span class="c"># Or set in ~/.cursor/config or env:</span>\n' +
+'export OPENAI_API_BASE=<span class="s">"' + API + '"</span>\n' +
+'export OPENAI_API_KEY=<span class="s">"' + key + '"</span>\n\n' +
+'<span class="c"># In Cursor settings, enable "OpenAI" as a custom provider</span>\n' +
+'<span class="c"># and enter the model name above when picking a model.</span>';
+        break;
+      case "aider":
+        body =
+'<span class="c"># Aider — uses OpenAI-compatible mode</span>\n' +
+'export OPENAI_API_BASE=<span class="s">"' + API + '"</span>\n' +
+'export OPENAI_API_KEY=<span class="s">"' + key + '"</span>\n\n' +
+'aider --model openai/' + id + '\n\n' +
+'<span class="c"># Or in .aider.conf.yml:</span>\n' +
+'openai-api-base: <span class="s">"' + API + '"</span>\n' +
+'openai-api-key:  <span class="s">"' + key + '"</span>\n' +
+'model: openai/' + id + '\n\n' +
+'<span class="c"># Works the same for Continue, OpenCode, etc. —</span>\n' +
+'<span class="c"># any tool that lets you set an OpenAI base URL.</span>';
+        break;
+    }
+    codeBlock.innerHTML = body;
+  }
+
+  /* config tabs */
+  document.querySelectorAll(".tab").forEach(t => {
+    t.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+      t.classList.add("active");
+      activeTab = t.dataset.tab;
+      renderConfig();
+    });
+  });
+
+  copyCode.addEventListener("click", async () => {
+    const text = codeBlock.innerText;
+    try { await navigator.clipboard.writeText(text); toast("Config copied", "ok"); }
+    catch { toast("Copy failed — select manually", "err"); }
+  });
+
+  /* filters */
+  [searchBox, filterCap, sortBy].forEach(el => el.addEventListener("input", renderModels));
+  pgTemp.addEventListener("input", () => pgTempVal.textContent = pgTemp.value);
+
+  /* ── playground ── */
+  pgRun.addEventListener("click", runPlayground);
+
+  async function runPlayground() {
+    const key = getKey();
+    if (!key) { toast("Save your API key first", "err"); apiKeyEl.focus(); return; }
+    if (!activeModel) { toast("Select a model first", "err"); return; }
+    const prompt = pgPrompt.value.trim();
+    if (!prompt) { toast("Enter a prompt", "err"); return; }
+
+    pgRun.disabled = true; pgRun.textContent = "Running…";
+    pgOut.className = "pg-out";
+    pgOut.innerHTML = '<span class="label">' + escapeHtml(activeModel.id) + ' · ' + (pgStream.checked ? "streaming" : "non-stream") + '</span>';
+    pgStats.style.display = "none";
+    // Defer the reveal so it waits for the first paint of response content.
+    setTimeout(() => pgOut.classList.add("live"), 50);
+
+    const body = {
+      model: activeModel.id,
+      messages: [{ role: "user", content: prompt }],
+      temperature: parseFloat(pgTemp.value),
+      max_tokens: parseInt(pgMaxTok.value, 10) || 200,
+      stream: !!pgStream.checked
+    };
+
+    const started = performance.now();
+    try {
+      const res = await fetch(API + "/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error("HTTP " + res.status + " — " + txt.slice(0, 300));
+      }
+
+      if (body.stream) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = "", acc = "", firstTok = 0, tokens = 0;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          const lines = buf.split("\n");
+          buf = lines.pop();
+          for (const line of lines) {
+            const t = line.trim();
+            if (!t.startsWith("data:")) continue;
+            const payload = t.slice(5).trim();
+            if (payload === "[DONE]") continue;
+            try {
+              const j = JSON.parse(payload);
+              const delta = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content;
+              if (delta) {
+                if (!firstTok) firstTok = performance.now() - started;
+                acc += delta; tokens++;
+                pgOut.textContent = acc;
+                pgOut.scrollTop = pgOut.scrollHeight;
+              }
+            } catch {}
+          }
+        }
+        const ms = Math.round(performance.now() - started);
+        pgStats.style.display = "flex";
+        pgStats.innerHTML = '⏱ first token ' + (firstTok ? Math.round(firstTok) : "—") + 'ms · total ' + ms + 'ms · ~' + tokens + ' chunks streamed';
+      } else {
+        const j = await res.json();
+        const content = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+        const usage = j.usage || {};
+        pgOut.textContent = content || "(empty response)";
+        const ms = Math.round(performance.now() - started);
+        pgStats.style.display = "flex";
+        pgStats.innerHTML = '⏱ ' + ms + 'ms · prompt ' + (usage.prompt_tokens || "—") + ' tok · completion ' + (usage.completion_tokens || "—") + ' tok';
+      }
+    } catch (e) {
+      pgOut.style.opacity = "1";
+      pgOut.innerHTML = '<span class="label">error</span><span class="err">' + escapeHtml(e.message) + '</span>';
+    } finally {
+      pgRun.disabled = false; pgRun.textContent = "Run ▸";
+    }
+  }
+
+  /* ── prices ── */
+  async function loadPrices() {
+    try {
+      const res = await fetch(API + "/prices");
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      const rows = (data.models || []).slice();
+      priceMeta.textContent = rows.length + " models · live";
+      rows.sort((a, b) => (a.displayName || a.model || "").localeCompare(b.displayName || b.model || ""));
+      priceScroll.innerHTML =
+        '<table class="price-table"><thead><tr>'
+        + '<th>Model</th><th>Provider(s)</th><th class="num">In $/M</th><th class="num">Out $/M</th><th class="num">Cache read</th>'
+        + '</tr></thead><tbody>'
+        + rows.map(r => {
+          const provs = (r.providers || []);
+          const cheapest = provs.reduce((a, p) => {
+            const pr = p.pricing || {};
+            const score = (pr.input || 0) + (pr.output || 0);
+            if (!a || score < a.score) return { score, pr, name: p.providerName || p.provider };
+            return a;
+          }, null);
+          const provNames = provs.map(p => p.providerName || p.provider).join(", ");
+          const pr = (cheapest && cheapest.pr) || {};
+          return '<tr>'
+            + '<td class="pm">' + escapeHtml(r.displayName || r.model || "") + '<div style="font-size:10.5px;color:var(--text-faint);font-family:var(--mono)">' + escapeHtml(r.model || "") + '</div></td>'
+            + '<td class="pv">' + escapeHtml(provNames) + '</td>'
+            + '<td class="num">' + (pr.input != null ? "$" + pr.input : "—") + '</td>'
+            + '<td class="num">' + (pr.output != null ? "$" + pr.output : "—") + '</td>'
+            + '<td class="num">' + (pr.cacheRead != null ? "$" + pr.cacheRead : "—") + '</td>'
+            + '</tr>';
+        }).join("")
+        + '</tbody></table>';
+    } catch (e) {
+      priceScroll.innerHTML = '<div class="empty">Could not load prices.<br><span class="empty-sub">' + escapeHtml(e.message) + '</span></div>';
+    }
+  }
+
+  /* ── init ── */
+  refreshKeyPill();
+  loadCatalog().then(() => {
+    const saved = localStorage.getItem(LS_MODEL);
+    if (saved && models.find(m => m.id === saved)) selectModel(saved);
+  });
+  loadPrices();
+})();
+</script>
+</body>
+</html>
